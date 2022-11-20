@@ -42,6 +42,13 @@ flags.DEFINE_boolean('info', False, 'show detailed info of tracked objects')
 flags.DEFINE_boolean('count', False, 'count objects being tracked on screen')
 
 
+sick_frame = dict()
+healthy_frame = dict()
+death_frame = dict()
+
+first_frame = dict()
+
+
 def main(_argv):
     # Definition of the parameters
     max_cosine_distance = 0.4
@@ -103,6 +110,14 @@ def main(_argv):
             image = Image.fromarray(frame)
         else:
             print('Video has ended or failed, try a different video format!')
+            print("First Frame")
+            print(first_frame)
+            print("Death Frame")
+            print(death_frame)
+            print("Sick Frame")
+            print(sick_frame)
+            print("healthy Frame")
+            print(healthy_frame)
             break
         frame_num += 1
         print('Frame #: ', frame_num)
@@ -215,20 +230,25 @@ def main(_argv):
                 continue
             bbox = track.to_tlbr()
             class_name = track.get_class()
-        if class_name == "death_chicken":
-            color = (255, 0, 0)
-        elif class_name == "healthy_chicken":
-            color = (0, 255, 0)
-        else:
-            color = (255, 255, 0)
-        # draw bbox on screen
-            # color = colors[int(track.track_id) % len(colors)]
-            # color = [i * 255 for i in color]
+            if track.track_id not in first_frame:
+                first_frame[track.track_id] = frame_num
+            if class_name == "death_chicken":
+                color = (190, 37, 40)
+                death_frame[track.track_id] = frame_num
+            elif class_name == "sick_chicken":
+                color = (224, 210, 28)
+                sick_frame[track.track_id] = frame_num
+            else:
+                color = (52, 185, 23)
+                healthy_frame[track.track_id] = frame_num
+        # # draw bbox on screen
+        #     color = colors[int(track.track_id) % len(colors)]
+        #     color = [i * 255 for i in color]
             cv2.rectangle(frame, (int(bbox[0]), int(
                 bbox[1])), (int(bbox[2]), int(bbox[3])), color, 2)
             cv2.rectangle(frame, (int(bbox[0]), int(bbox[1]-30)), (int(bbox[0])+(
-                len(class_name)+len(str(track.track_id)))*17, int(bbox[1])), color, -1)
-            cv2.putText(frame, class_name + "-" + str(track.track_id),
+                len(class_name))*17, int(bbox[1])), color, -1)
+            cv2.putText(frame, class_name,
                         (int(bbox[0]), int(bbox[1]-10)), 0, 0.75, (255, 255, 255), 2)
 
         # if enable info flag then print details about each track
